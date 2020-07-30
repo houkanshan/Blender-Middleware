@@ -14,7 +14,7 @@ from cc.export import (
 bl_info = {
     'name': 'Export: Unity Lines (.lines)',
     'author': 'Cardboard Computer',
-    'blender': (2, 69, 0),
+    'blender': (2, 80, 0),
     'description': 'Export loose edges of a mesh for Unity',
     'category': 'Cardboard',
 }
@@ -167,14 +167,14 @@ class UnityLineExporter(bpy.types.Operator):
     bl_idname = 'cc.export_unity_lines'
     bl_label = 'Export Unity Lines'
 
-    filepath = bpy.props.StringProperty(
+    filepath: bpy.props.StringProperty(
         subtype='FILE_PATH',)
-    check_existing = bpy.props.BoolProperty(
+    check_existing: bpy.props.BoolProperty(
         name="Check Existing",
         description="Check and warn on overwriting existing files",
         default=True,
         options={'HIDDEN'},)
-    precision = bpy.props.IntProperty(
+    precision: bpy.props.IntProperty(
         name="Float Precision",
         description="Float precision used for GL commands",
         default=6)
@@ -222,18 +222,22 @@ def menu_import(self, context):
 def menu_export(self, context):
     self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.lines)")
 
-def register():
-    cc.utils.register(__REGISTER__)
 
-    bpy.types.INFO_MT_file_import.append(menu_import)
-    bpy.types.INFO_MT_file_export.append(menu_export)
+classes = (
+    UnityLineExporter,
+)
+
+def register():
+    cc.utils.register(classes)
+
+    bpy.types.TOPBAR_MT_file_import.append(menu_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_export)
 
 def unregister():
-    cc.utils.unregister(__REGISTER__)
+    cc.utils.unregister(classes)
 
-    bpy.types.INFO_MT_file_import.remove(menu_import)
-    bpy.types.INFO_MT_file_export.remove(menu_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_export)
 
-__REGISTER__ = (
-    UnityLineExporter,    
-)
+if __name__ == "__main__":
+    register()

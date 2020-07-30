@@ -146,6 +146,16 @@ def find(context, event, ray_max=1000.0):
     if best_obj is not None:
         return best_obj, best_ray_origin, best_ray_target
 
+
+# https://github.com/alessandro-zomparelli/tissue/blob/d1196ea156af92521305a67b17833a92aa7a267e/utils.py#L194
+
+def simple_to_mesh(ob):
+    dg = bpy.context.evaluated_depsgraph_get()
+    ob_eval = ob.evaluated_get(dg)
+    me = bpy.data.meshes.new_from_object(ob_eval, preserve_all_data_layers=True, depsgraph=dg)
+    me.calc_normals()
+    return me
+
 class Swap:
     def __init__(self, obj, prop, val):
         self.obj = obj
@@ -188,9 +198,12 @@ class ModifiedMesh:
         scene = self.scene or bpy.context.scene
 
         self.orig_mesh = obj.data
-        self.mod_mesh = obj.data = obj.to_mesh(
-            scene=scene, apply_modifiers=self.apply_modifiers,
-            settings=self.settings)
+        # v2.7
+        # self.mod_mesh = obj.data = obj.to_mesh(
+        #     scene=scene, apply_modifiers=self.apply_modifiers,
+        #     settings=self.settings)
+        obj.data = simple_to_mesh(obj)
+        self.mod_mesh = obj.data
 
         if self.apply_modifiers:
             settings = self.modifier_settings
@@ -205,7 +218,7 @@ class ModifiedMesh:
             bm.to_mesh(self.mod_mesh)
             bm.free()
 
-        scene.update()
+        scene.collection.objects.link(obj)
 
         return obj.data
 
@@ -213,7 +226,8 @@ class ModifiedMesh:
         obj = self.obj
         obj.data = self.orig_mesh
         scene = self.scene or bpy.context.scene
-        scene.update()
+
+        scene.collection.objects.link(obj)
 
         if self.apply_modifiers:
             settings = self.modifier_settings
@@ -269,7 +283,7 @@ def register(objects):
             bpy.utils.register_class(obj)
 
 def unregister(objects):
-    for obj in objects:
+    for obj in reversed(objects):
         if hasattr(obj, 'count'):
             cls, prop, value = obj
             if hasattr(cls, prop):

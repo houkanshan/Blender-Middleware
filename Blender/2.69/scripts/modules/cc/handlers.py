@@ -11,5 +11,5 @@ def update_aux_colors(scene):
             if layer and layer.name in obj.data.uv_textures:
                 cc.colors.bake_to_uvmap(obj, layer.name, layer.name)
 
-if update_aux_colors not in bpy.app.handlers.scene_update_post:
-    bpy.app.handlers.scene_update_post.append(update_aux_colors)
+# if update_aux_colors not in bpy.app.handlers.scene_update_post:
+#     bpy.app.handlers.scene_update_post.append(update_aux_colors)

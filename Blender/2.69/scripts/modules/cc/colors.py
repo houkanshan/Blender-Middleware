@@ -87,7 +87,7 @@ def uv_to_rgba(uv, precision=4096):
 
 def bake_to_uvmap(obj, layer, uvmap):
     layer = Manager(obj).get_layer(layer)
-    uvmap = obj.data.uv_layers[obj.data.uv_textures.keys().index(uvmap)]
+    uvmap = obj.data.uv_layers[obj.data.uv_layers.keys().index(uvmap)]
 
     for i, s in enumerate(layer.itersamples()):
         uv = rgba_to_uv((s.color.r, s.color.g, s.color.b, s.alpha))
@@ -417,16 +417,16 @@ class Manager:
             else:
                 if name in self.obj.data.vertex_colors:
                     meta['aux_poly_color'] = name
-                    if name not in self.obj.data.uv_textures:
-                        uvtex = self.obj.data.uv_textures.new()
+                    if name not in self.obj.data.uv_layers:
+                        uvtex = self.obj.data.uv_layers.new()
                         uvtex.name = name
-                        index = self.obj.data.uv_textures.keys().index(name)
+                        index = self.obj.data.uv_layers.keys().index(name)
                         uvmap = self.obj.data.uv_layers[index]
                         uvmap.name = name
                         bake_to_uvmap(self.obj, name, name)
 
     def get_export_colormap(self):
-        for uvmap in self.obj.data.uv_textures:
+        for uvmap in self.obj.data.uv_layers:
             if uvmap.active_render:
                 if self.is_line():
                     colormap = LineColormap(self.obj, uvmap.name)
@@ -465,7 +465,7 @@ class Manager:
 
     def get_or_add_colormap(self, name=None, **kw):
         if not name:
-            name = self.get_unique_name(lookup=self.obj.data.uv_textures)
+            name = self.get_unique_name(lookup=self.obj.data.uv_layers)
         colormap = self.get_colormap(name)
         if colormap:
             return colormap
@@ -479,7 +479,7 @@ class Manager:
 
     def get_active_colormap(self, autoadd=True):
         colormap = None
-        v = self.obj.data.uv_textures
+        v = self.obj.data.uv_layers
         if v.active:
             if self.is_line():
                 colormap = LineColormap(self.obj, v.active.name)
@@ -890,7 +890,7 @@ class Colormap:
 
         if self.exists():
             self.props = self.colormap_data[self.name]
-            self.uvmap = self.data.uv_textures[self.name]
+            self.uvmap = self.data.uv_layers[self.name]
 
     def update_colormap_data(self):
         data = self.data
@@ -904,10 +904,10 @@ class Colormap:
             if tex not in data.uv_layers:
                 # removed from ui list
                 del self.colormap_data[tex]
-            elif tex not in data.uv_textures:
+            elif tex not in data.uv_layers:
                 # renamed in ui list
                 index = data.uv_layers.keys().index(tex)
-                name = data.uv_textures[index].name
+                name = data.uv_layers[index].name
                 data.uv_layers[tex].name = name
                 self.colormap_data[name] = self.colormap_data[tex]
                 del self.colormap_data[tex]
@@ -917,14 +917,14 @@ class Colormap:
 
     def exists(self):
         return (
-            self.name in self.data.uv_textures and
+            self.name in self.data.uv_layers and
             self.name in self.colormap_data)
 
     def create(self):
         if self.exists():
             return
 
-        data = self.data.uv_textures
+        data = self.data.uv_layers
 
         active_index = data.active_index
 
@@ -946,7 +946,7 @@ class Colormap:
 
     def destroy(self):
         if self.exists():
-            self.data.uv_textures.remove(self.uvmap)
+            self.data.uv_layers.remove(self.uvmap)
 
     def activate(self):
         self.uvmap.active = True
